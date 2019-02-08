@@ -8,7 +8,9 @@ WIDHT = 850
 HEIGHT = 950
 TIMER = 1
 SPEED = 600
+GRAVITY = 0.2
 c = 0
+screen_rect = (0, 0, WIDHT, HEIGHT)
 record = 0
 pause = False
 pause_color = 'orange'
@@ -30,6 +32,7 @@ figPlace = pygame.mixer.Sound('music\Place.wav')
 figPlace.set_volume(sound_volume)
 removeLine = pygame.mixer.Sound('music\RemoveLine.wav')
 removeLine.set_volume(1)
+
 
 class Board():
     # создание поля
@@ -266,6 +269,8 @@ class Board():
         while c < 12:
             for i in range(18):
                 if self.board[i][c] != 0:
+                    create_particles(((c + 0.5) * self.cell_size + self.left,
+                                      (i + 0.5) * self.cell_size + self.top))
                     self.board[i][c] = 0
                     break
             self.render()
@@ -390,6 +395,49 @@ def new_game():
     pygame.mixer.music.play(-1)
 
 
+class Particle(pygame.sprite.Sprite):
+    # сгенерируем частицы разного размера
+    fire_img = load_image("flare.png")
+    fire = []
+    fire.append(pygame.transform.scale(fire_img, (40, 40)))
+
+    def __init__(self, pos, dx, dy):
+        super().__init__(all_sprites)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        # у каждой частицы своя скорость — это вектор
+        self.velocity = [dx, dy]
+        # и свои координаты
+        self.rect.x, self.rect.y = pos
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = GRAVITY
+
+    def update(self):
+        # применяем гравитационный эффект:
+        # движение с ускорением под действием гравитации
+        self.velocity[1] += self.gravity
+        # перемещаем частицу
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        # убиваем, если частица ушла за экран
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
+
+
+def create_particles(position):
+    # количество создаваемых частиц
+    particle_count = 20
+    # возможные скорости
+    numbers = range(-5, 6)
+    for _ in range(particle_count):
+        Particle(position, random.choice(numbers), random.choice(numbers))
+
+
+all_sprites = pygame.sprite.Group()
+clock = pygame.time.Clock()
+
 pygame.init()
 start_screen()
 user = True
@@ -484,7 +532,10 @@ while running and user:
     pygame.draw.rect(screen, pygame.Color('brown'), (50, 500, 100, 100), 5)
     pygame.draw.rect(screen, pygame.Color('red'), (50, 800, 100, 100), 5)
     pygame.draw.rect(screen, pygame.Color('gold'), (20, 650, 160, 100), 5)
+    all_sprites.update()
     board.render()
+    all_sprites.draw(screen)
+    clock.tick(50)
     pygame.display.flip()
 
 if not (running):
