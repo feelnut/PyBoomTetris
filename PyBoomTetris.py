@@ -20,6 +20,7 @@ pause_color = 'orange'
 pygame.time.set_timer(TIMER, SPEED)
 size = WIDHT, HEIGHT
 screen = pygame.display.set_mode(size)
+pygame.display.set_caption("PyBoomTetris")
 # Загрузка всех фоновых песен и звуков игры
 pygame.mixer.music.load('music\privet.wav')
 pygame.mixer.music.set_volume(0.3)
