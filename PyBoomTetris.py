@@ -8,6 +8,7 @@ HEIGHT = 950
 TIMER = 1
 SPEED = 600
 c = 0
+record = 0
 pause = False
 pause_color = 'orange'
 
@@ -107,46 +108,6 @@ class Board():
             return True
         else:
             return False
-
-    def turn_left(self):
-        for i in range(len(self.coords)):
-            self.board[self.coords[i][0]][self.coords[i][1]] = 0
-        new_coords = [self.coords[0]]
-        y, x = self.coords[0]
-        if self.test_field_around(y, x):
-            if self.figure_num in [0, 1, 4, 6, 7, 8]:
-                for i in range(1, len(self.coords)):
-                    if self.coords[i][0] == y - 1 and self.coords[i][1] == x - 1:
-                        new_coords.append([y + 1, x - 1])
-                    elif self.coords[i][0] == y - 1 and self.coords[i][1] == x:
-                        new_coords.append([y, x - 1])
-                    elif self.coords[i][0] == y - 1 and self.coords[i][1] == x + 1:
-                        new_coords.append([y - 1, x - 1])
-                    elif self.coords[i][0] == y and self.coords[i][1] == x - 1:
-                        new_coords.append([y + 1, x])
-                    elif self.coords[i][0] == y and self.coords[i][1] == x + 1:
-                        new_coords.append([y - 1, x])
-                    elif self.coords[i][0] == y + 1 and self.coords[i][1] == x - 1:
-                        new_coords.append([y + 1, x + 1])
-                    elif self.coords[i][0] == y + 1 and self.coords[i][1] == x:
-                        new_coords.append([y, x + 1])
-                    elif self.coords[i][0] == y + 1 and self.coords[i][1] == x + 1:
-                        new_coords.append([y - 1, x + 1])
-            elif self.figure_num == 3:
-                if self.coords[1][0] == y - 1 and self.coords[1][1] == x:
-                    new_coords.append([y, x - 1])
-                elif self.coords[1][0] == y and self.coords[1][1] == x - 1:
-                    new_coords.append([y + 1, x])
-                elif self.coords[1][0] == y + 1 and self.coords[1][1] == x:
-                    new_coords.append([y, x + 1])
-                elif self.coords[1][0] == y and self.coords[1][1] == x + 1:
-                    new_coords.append([y - 1, x])
-            else:
-                new_coords = self.coords[:]
-            self.coords = new_coords[:]
-        for i in range(len(self.coords)):
-            self.board[self.coords[i][0]][self.coords[i][1]] = self.color
-        self.render()
 
     def turn_right(self):
         for i in range(len(self.coords)):
@@ -330,9 +291,8 @@ def start_screen():
                   "Ну что ж, вроде должно быть понятно. Удачи!",
                   "", "",
                   "Управление:",
-                  "A - повернуть по часовой, D - против часовой,",
-                  "Зажать пробел - установить фигуру,",
-                  "Стрелки влево и вправо - перемещение фигуры по полю,",
+                  "W - повернуть фигуру, S - установить фигуру,",
+                  "A и D - перемещение фигуры по полю,",
                   "R - перезапуск игры, B - бомба.",
                   "", "",
                   "Кнопки в игре:",
@@ -418,20 +378,18 @@ while running and user:
             running = False
 
         if event.type == pygame.KEYDOWN and not (pause):
-            if event.key == pygame.K_RIGHT:
-                board.move_right()
-            if event.key == pygame.K_LEFT:
-                board.move_left()
-            if event.key == pygame.K_d:
-                board.turn_right()
-            if event.key == pygame.K_a:
-                board.turn_left()
-            if event.key == pygame.K_SPACE:
-                pygame.time.set_timer(TIMER, 50)
             if event.key == pygame.K_b:
                 board.boom()
             if event.key == pygame.K_r:
                 new_game()
+            if event.key == pygame.K_w:
+                board.turn_right()
+            if event.key == pygame.K_s:
+                pygame.time.set_timer(TIMER, 50)
+            if event.key == pygame.K_a:
+                board.move_left()
+            if event.key == pygame.K_d:
+                board.move_right()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
@@ -450,7 +408,7 @@ while running and user:
                 new_game()
 
         if event.type == pygame.KEYUP and not (pause):
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_s:
                 pygame.time.set_timer(TIMER, SPEED)
 
         if event.type == TIMER and not (pause):
@@ -462,6 +420,7 @@ while running and user:
 
     if board.game_over():
         user = False
+        record = board.score()
         game_over_func()
 
     screen.blit(fon, (0, 0))
@@ -477,7 +436,7 @@ while running and user:
     screen.blit(text2, text_rect2)
     text3 = font.render('Счёт: {}'.format(board.score()), True, pygame.Color('purple'))
     text_rect3 = text3.get_rect()
-    text_rect3.center = (100, 400)
+    text_rect3.center = (100, 380)
     screen.blit(text3, text_rect3)
     text4 = font.render('Заново', True, pygame.Color('yellow'))
     text_rect4 = text4.get_rect()
@@ -491,9 +450,13 @@ while running and user:
     text_rect6 = text6.get_rect()
     text_rect6.center = (100, 700)
     screen.blit(text6, text_rect6)
+    text7 = font.render('Рекорд: {}'.format(str(record)), True, pygame.Color('gold'))
+    text_rect7 = text7.get_rect()
+    text_rect7.center = (100, 420)
+    screen.blit(text7, text_rect7)
     pygame.draw.rect(screen, pygame.Color('green'), (50, 50, 100, 100), 2)
     pygame.draw.rect(screen, pygame.Color('green'), (50, 200, 100, 100), 2)
-    pygame.draw.rect(screen, pygame.Color('purple'), (50, 350, 100, 100), 2)
+    pygame.draw.rect(screen, pygame.Color('purple'), (30, 350, 140, 100), 2)
     pygame.draw.rect(screen, pygame.Color('brown'), (50, 500, 100, 100), 5)
     pygame.draw.rect(screen, pygame.Color('red'), (50, 800, 100, 100), 5)
     pygame.draw.rect(screen, pygame.Color('gold'), (20, 650, 160, 100), 5)
