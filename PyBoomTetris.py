@@ -3,6 +3,7 @@ import random
 import os
 import sys
 
+pygame.mixer.init()
 WIDHT = 850
 HEIGHT = 950
 TIMER = 1
@@ -16,6 +17,19 @@ pygame.time.set_timer(TIMER, SPEED)
 size = WIDHT, HEIGHT
 screen = pygame.display.set_mode(size)
 
+pygame.mixer.music.load('music\privet.wav')
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1)
+
+sound_volume = 0.25
+gameover = pygame.mixer.Sound('music\gameover.wav')
+gameover.set_volume(sound_volume)
+explosion = pygame.mixer.Sound('music\explosion.wav')
+explosion.set_volume(sound_volume)
+figPlace = pygame.mixer.Sound('music\Place.wav')
+figPlace.set_volume(sound_volume)
+removeLine = pygame.mixer.Sound('music\RemoveLine.wav')
+removeLine.set_volume(1)
 
 class Board():
     # создание поля
@@ -39,7 +53,7 @@ class Board():
              [[0, 6]],  # 2
              [[0, 5], [0, 6]],  # 3
              [[0, 5], [0, 4], [0, 6]],  # 4
-             [[0, 5], [0, 6], [1, 5], [1, 6]],  # 5 +
+             [[0, 5], [0, 6], [1, 5], [1, 6]],  # 5
              [[1, 5], [0, 5], [1, 4], [0, 6]],  # 6
              [[1, 6], [0, 5], [0, 6], [1, 7]],  # 7
              [[0, 5], [0, 4], [0, 6], [1, 5]]]  # 8
@@ -207,6 +221,7 @@ class Board():
                     f = False
                     break
             if f:
+                removeLine.play()
                 for i in range(y, 0, -1):
                     for j in range(self.width):
                         self.board[i][j] = self.board[i - 1][j]
@@ -226,6 +241,7 @@ class Board():
 
     def boom(self):
         if self.bomb_counter > 0:
+            explosion.play()
             self.bomb_counter -= 1
             pygame.time.set_timer(TIMER, 0)
             c = 0
@@ -323,14 +339,17 @@ def start_screen():
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                pygame.mixer.music.stop()
                 new_game()
                 return  # начинаем игру
         pygame.display.flip()
 
 
 def game_over_func():
+    gameover.play()
     image = load_image('gameover.png')
     screen.fill((100, 100, 100))
+    pygame.mixer.music.stop()
 
     while True:
         for event in pygame.event.get():
@@ -365,6 +384,10 @@ def new_game():
     moving = False
     fig = board.figure()
     pygame.time.set_timer(TIMER, SPEED)
+    volume = 0.3
+    pygame.mixer.music.load('music\OST.mp3')
+    pygame.mixer.music.set_volume(volume)
+    pygame.mixer.music.play(-1)
 
 
 pygame.init()
@@ -415,6 +438,7 @@ while running and user:
             board.move_down()
 
     if board.is_stop():
+        figPlace.play()
         board.test_line()
         fig = board.figure()
 
