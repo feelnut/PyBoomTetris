@@ -1,9 +1,11 @@
+# импорт всех необходимых модулей
 import pygame
 import random
 import os
 import sys
 
 pygame.mixer.init()
+# Константы и другие необходимые переменные
 WIDHT = 850
 HEIGHT = 950
 TIMER = 1
@@ -14,11 +16,11 @@ screen_rect = (0, 0, WIDHT, HEIGHT)
 record = 0
 pause = False
 pause_color = 'orange'
-
+# Дисплей и таймер для игры
 pygame.time.set_timer(TIMER, SPEED)
 size = WIDHT, HEIGHT
 screen = pygame.display.set_mode(size)
-
+# Загрузка всех фоновых песен и звуков игры
 pygame.mixer.music.load('music\privet.wav')
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
@@ -34,6 +36,22 @@ removeLine = pygame.mixer.Sound('music\RemoveLine.wav')
 removeLine.set_volume(1)
 
 
+# Загрузка картинок для игры
+def load_image(name, color_key=None):
+    fullname = os.path.join('data', name)
+    try:
+        image = pygame.image.load(fullname)
+    except pygame.error as message:
+        print('Cannot load image:', name)
+        raise SystemExit(message)
+    if color_key is not None:
+        if color_key is -1:
+            color_key = image.get_at((0, 0))
+        image.set_colorkey(color_key)
+    return image
+
+
+# Класс основной доски для тетриса
 class Board():
     # создание поля
     def __init__(self, width, height, left=200, top=10, cell_size=50):
@@ -48,6 +66,7 @@ class Board():
         self.bomb_counter = 0
         self.bomba = False
 
+    # Создание новой фигуры, если старая установлена(регулируется в осн. коде)
     def figure(self):
         global moving
         # Начальные координаты фигур(9 штук)
@@ -73,6 +92,7 @@ class Board():
         self.add_to_board()
         self.render()
 
+    # Вспомогательная функция, которая добавит текущую фигуру на поле
     def add_to_board(self):
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
@@ -111,11 +131,7 @@ class Board():
                     1
                 )
 
-    def fill(self, coords, color):
-        for i in range(len(coords)):
-            self.board[coords[i][0]][coords[i][1]] = color
-        self.render()
-
+    # Проверка пустоты клеток вокруг фигуры для её поворота
     def test_field_around(self, y, x):
         if (x - 1 >= 0 and y - 1 >= 0 and x + 1 < 12 and y + 1 < 18) and \
                 (self.board[y - 1][x - 1] == 0 and self.board[y][x - 1] == 0 and
@@ -126,6 +142,7 @@ class Board():
         else:
             return False
 
+    # Функция поворота
     def turn_right(self):
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = 0
@@ -166,6 +183,7 @@ class Board():
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
         self.render()
 
+    # Смещение фигуры налево
     def move_left(self):
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = 0
@@ -180,6 +198,7 @@ class Board():
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
 
+    # Смещение фигуры направо
     def move_right(self):
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = 0
@@ -194,6 +213,7 @@ class Board():
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
 
+    # Смещение фигуры вниз(автоматически, регулируется из осн. кода)
     def move_down(self):
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = 0
@@ -203,6 +223,7 @@ class Board():
         for i in range(len(self.coords)):
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
 
+    # Проверка того, что фигура упёрлась в другую
     def is_stop(self):
         f = False
         for i in range(len(self.coords)):
@@ -215,6 +236,7 @@ class Board():
             self.board[self.coords[i][0]][self.coords[i][1]] = self.color
         return f
 
+    # Проверка поля на полностью заполненные линии и их удаление
     def test_line(self):
         global SPEED
         for y in range(self.height):
@@ -233,15 +255,19 @@ class Board():
                 pygame.time.set_timer(TIMER, SPEED)
                 self.bomb_counter += random.choice([0, 1, 1, 2, 2])
 
+    # Возвращение текущего счёта для отображения на экране
     def score(self):
         return self.ingame_counter
 
+    # Возврат значение True, если игра закончена, иначе False
     def game_over(self):
         return self.end
 
+    # Возвращение текущего количества бомб для отображения на экране
     def num_bomb(self):
         return self.bomb_counter
 
+    # Установка взрыва
     def boom(self):
         if self.bomb_counter > 0:
             explosion.play()
@@ -264,6 +290,7 @@ class Board():
                 c += 1
             self.delete_bombs()
 
+    # Удаление взрывов с частицами
     def delete_bombs(self):
         c = 0
         while c < 12:
@@ -280,27 +307,36 @@ class Board():
         pygame.time.set_timer(TIMER, SPEED)
 
 
-def load_image(name, color_key=None):
-    fullname = os.path.join('data', name)
-    try:
-        image = pygame.image.load(fullname)
-    except pygame.error as message:
-        print('Cannot load image:', name)
-        raise SystemExit(message)
-    # image = image.convert_alpha()
+# Частицы взрыва(искры)
+class Particle(pygame.sprite.Sprite):
+    fire_img = load_image("flare.png")
+    fire = []
+    fire.append(pygame.transform.scale(fire_img, (40, 40)))
 
-    if color_key is not None:
-        if color_key is -1:
-            color_key = image.get_at((0, 0))
-        image.set_colorkey(color_key)
-    return image
+    def __init__(self, pos, dx, dy):
+        super().__init__(all_sprites)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        self.velocity = [dx, dy]
+        self.rect.x, self.rect.y = pos
+        self.gravity = GRAVITY
+
+    def update(self):
+        self.velocity[1] += self.gravity
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
 
 
+# Выход из приложения
 def terminate():
     pygame.quit()
     sys.exit()
 
 
+# Начальный экран
 def start_screen():
     intro_text = ["PyBoomTetris", "",
                   "Добро пожаловать в тетрис!",
@@ -350,6 +386,7 @@ def start_screen():
         pygame.display.flip()
 
 
+# Экран конца игры
 def game_over_func():
     gameover.play()
     image = load_image('gameover.png')
@@ -377,9 +414,11 @@ def game_over_func():
         pygame.display.flip()
 
 
+# Фон приложения
 fon = pygame.transform.scale(load_image('title.png'), (850, 950))
 
 
+# Функция начала новой игры(Обновляет все значения)
 def new_game():
     global running, moving, fig, board, user
     screen.blit(fon, (0, 0))
@@ -395,46 +434,15 @@ def new_game():
     pygame.mixer.music.play(-1)
 
 
-class Particle(pygame.sprite.Sprite):
-    # сгенерируем частицы разного размера
-    fire_img = load_image("flare.png")
-    fire = []
-    fire.append(pygame.transform.scale(fire_img, (40, 40)))
-
-    def __init__(self, pos, dx, dy):
-        super().__init__(all_sprites)
-        self.image = random.choice(self.fire)
-        self.rect = self.image.get_rect()
-
-        # у каждой частицы своя скорость — это вектор
-        self.velocity = [dx, dy]
-        # и свои координаты
-        self.rect.x, self.rect.y = pos
-
-        # гравитация будет одинаковой (значение константы)
-        self.gravity = GRAVITY
-
-    def update(self):
-        # применяем гравитационный эффект:
-        # движение с ускорением под действием гравитации
-        self.velocity[1] += self.gravity
-        # перемещаем частицу
-        self.rect.x += self.velocity[0]
-        self.rect.y += self.velocity[1]
-        # убиваем, если частица ушла за экран
-        if not self.rect.colliderect(screen_rect):
-            self.kill()
-
-
+# Создание частиц
 def create_particles(position):
-    # количество создаваемых частиц
     particle_count = 20
-    # возможные скорости
     numbers = range(-5, 6)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
+# Создание списка спрайтов и таймера для частиц
 all_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 
@@ -448,6 +456,7 @@ while running and user:
         if event.type == pygame.QUIT:
             running = False
 
+        # Обработка нажатий кнопок для игры
         if event.type == pygame.KEYDOWN and not (pause):
             if event.key == pygame.K_b:
                 board.boom()
@@ -462,6 +471,7 @@ while running and user:
             if event.key == pygame.K_d:
                 board.move_right()
 
+        # Обработка нажатий кнопок на экране
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             if 50 <= x <= 150 and 50 <= y <= 150:
@@ -485,18 +495,20 @@ while running and user:
         if event.type == TIMER and not (pause):
             board.move_down()
 
+    # Проверка того, остановилась ли фигура. Если да, то удалить полные линии и создать новую
     if board.is_stop():
         figPlace.play()
         board.test_line()
         fig = board.figure()
 
+    # Если игра закончилась, то отобразить экран конца игры
     if board.game_over():
         user = False
         record = board.score()
         game_over_func()
 
+    # Фон и весь текст с кнопками на экране
     screen.blit(fon, (0, 0))
-
     font = pygame.font.Font(None, 25)
     text1 = font.render('Меню', True, pygame.Color('orange'))
     text_rect1 = text1.get_rect()
