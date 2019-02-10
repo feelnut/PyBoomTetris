@@ -116,7 +116,8 @@ class Board():
                          self.cell_size, self.cell_size),
                     )
                     boom = pygame.transform.scale(load_image('boom.png'), (50, 50))
-                    screen.blit(boom, (self.left + x * self.cell_size, self.top + y * self.cell_size))
+                    screen.blit(boom, (self.left + x * self.cell_size,
+                                       self.top + y * self.cell_size))
                 elif self.board[y][x] != 0:
                     pygame.draw.rect(
                         screen,
@@ -252,7 +253,7 @@ class Board():
                     for j in range(self.width):
                         self.board[i][j] = self.board[i - 1][j]
                 self.ingame_counter += 100
-                SPEED -= 30 * self.ingame_counter // 200
+                SPEED -= 15
                 pygame.time.set_timer(TIMER, SPEED)
                 self.bomb_counter += random.choice([0, 1, 1, 2, 2])
 
@@ -270,9 +271,11 @@ class Board():
 
     # Установка взрыва
     def boom(self):
+        global SPEED
         if self.bomb_counter > 0:
             explosion.play()
             self.bomb_counter -= 1
+            SPEED -= 10
             pygame.time.set_timer(TIMER, 0)
             c = 0
             for i in range(len(self.coords)):
@@ -339,6 +342,77 @@ def terminate():
 
 # Начальный экран
 def start_screen():
+    class Button():
+        button1 = pygame.transform.scale(load_image('button1.png'), (300, 150))
+        button2 = pygame.transform.scale(load_image('button2.png'), (300, 150))
+
+        def __init__(self, x, i):
+            self.image = Button.button1
+            self.x = x
+            self.y = 300 + i * 150
+
+        def update(self):
+            screen.blit(self.image, (self.x, self.y))
+
+        def get_event(self, event):
+            if self.x < event.pos[0] < self.x + 300 and self.y < event.pos[1] < self.y + 150:
+                self.image = Button.button2
+            else:
+                self.image = Button.button1
+
+    fon = pygame.transform.scale(load_image('title.png'), (850, 950))
+    screen.blit(fon, (0, 0))
+    buttons = []
+    for i in range(4):
+        buttons.append(Button(275, i))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 275 <= x <= 575 and 300 <= y < 450:
+                    pygame.mixer.music.stop()
+                    new_game()
+                    return
+                elif 275 <= x <= 575 and 450 <= y < 600:
+                    rules()
+                elif 275 <= x <= 575 and 600 < y <= 750:
+                    pass
+                elif 275 <= x <= 575 and 750 < y <= 900:
+                    terminate()
+            if event.type == pygame.MOUSEMOTION:
+                for i in buttons:
+                    i.get_event(event)
+        for i in buttons:
+            i.update()
+        font = pygame.font.Font(None, 100)
+        text1 = font.render('PyBoomTetris', True, pygame.Color('gold'))
+        text_rect1 = text1.get_rect()
+        text_rect1.center = (425, 120)
+        screen.blit(text1, text_rect1)
+        font = pygame.font.Font(None, 50)
+        text2 = font.render('Начать игру', True, pygame.Color('black'))
+        text_rect2 = text2.get_rect()
+        text_rect2.center = (425, 375)
+        screen.blit(text2, text_rect2)
+        text3 = font.render('Правила', True, pygame.Color('black'))
+        text_rect3 = text3.get_rect()
+        text_rect3.center = (425, 525)
+        screen.blit(text3, text_rect3)
+        text4 = font.render('Рекорды', True, pygame.Color('black'))
+        text_rect4 = text4.get_rect()
+        text_rect4.center = (425, 675)
+        screen.blit(text4, text_rect4)
+        text5 = font.render('Выход', True, pygame.Color('black'))
+        text_rect5 = text5.get_rect()
+        text_rect5.center = (425, 825)
+        screen.blit(text5, text_rect5)
+        pygame.display.flip()
+
+
+def rules():
     intro_text = ["PyBoomTetris", "",
                   "Добро пожаловать в тетрис!",
                   "Я думаю, вы знакомы с правилами, это будет взрывное веселье!",
@@ -359,9 +433,7 @@ def start_screen():
                   "'Счёт' - показывает текущий счёт(нажать нельзя),",
                   "'Заново' - перезапуск игры(Аналог кнопке R),",
                   "'У вас N бомб' - показывает кол-во зарядов,",
-                  "'Выход' - пустите меня отсюда тут сложно.",
-                  "", "",
-                  "Нажмите в любом месте или любую клавишу для старта."]
+                  "'Выход' - пустите меня отсюда тут сложно."]
 
     fon = pygame.transform.scale(load_image('title.png'), (850, 950))
     screen.blit(fon, (0, 0))
@@ -375,15 +447,19 @@ def start_screen():
         intro_rect.x = 10
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
-
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                pygame.mixer.music.stop()
-                new_game()
-                return  # начинаем игру
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 650 <= x <= 750 and 50 <= y <= 150:
+                    start_screen()
+        text = font.render('Назад', True, pygame.Color('red'))
+        text_rect = text.get_rect()
+        text_rect.center = (700, 100)
+        screen.blit(text, text_rect)
+        pygame.draw.rect(screen, pygame.Color('red'), (650, 50, 100, 100), 5)
         pygame.display.flip()
 
 
@@ -401,9 +477,8 @@ def game_over_func():
                 terminate()
 
             screen.blit(image, (-1, -1))
-            font = pygame.font.Font(None, 25)
-            text = font.render('Нажмите R для возврата в меню или закройте приложение для выхода',
-                               True, pygame.Color('red'))
+            font = pygame.font.Font(None, 40)
+            text = font.render('Нажмите R для возврата в меню', True, pygame.Color('red'))
             text_rect = text.get_rect()
             text_rect.center = (430, 700)
             screen.blit(text, text_rect)
@@ -412,8 +487,71 @@ def game_over_func():
                 if event.key == pygame.K_r:
                     start_screen()
                     return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 600 <= x <= 800 and 50 <= y <= 150:
+                    new_record()
+
+        font = pygame.font.Font(None, 30)
+        text = font.render('Записать рекорд', True, pygame.Color('gold'))
+        text_rect = text.get_rect()
+        text_rect.center = (700, 100)
+        screen.blit(text, text_rect)
+        pygame.draw.rect(screen, pygame.Color('gold'), (600, 50, 200, 100), 5)
         pygame.display.flip()
 
+def new_record():
+    name = '|'
+    recorded = False
+    name1 = ''
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN:
+                if 97 <= event.key <= 122:
+                    name = name[:-1] + chr(event.key).upper() + '|'
+                if event.key == pygame.K_BACKSPACE:
+                    name = name[:-2] + '|'
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if 300 <= event.pos[0] <= 600 and 200 <= event.pos[1] <= 350:
+                    name1 = name[:len(name) - 1]
+                    name = 'RECORDED!'
+                    recorded = True
+        fon = pygame.transform.scale(load_image('title.png'), (850, 950))
+        screen.blit(fon, (0, 0))
+        font = pygame.font.Font(None, 36)
+        button = pygame.transform.scale(load_image('button1.png'), (300, 150))
+        screen.blit(button, (300, 200))
+        text1 = font.render('Enter your name:', 1, pygame.Color('white'))
+        intro_rect = text1.get_rect().move(320, 100)
+        screen.blit(text1, intro_rect)
+        string_rendered = font.render('OK', 1, pygame.Color('black'))
+        text_rect = string_rendered.get_rect()
+        text_rect.center = (450, 275)
+        screen.blit(string_rendered, text_rect)
+        string_rendered = font.render(name, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect().move(320, 150)
+        screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+        if recorded:
+            myfile = open('data\stats.txt').read().split('\n')
+            d = {}
+            for i in range(len(myfile)):
+                if myfile[i]:
+                    d[myfile[i].split('|')[0]] = int(myfile[i].split('|')[1])
+            if name1 in d.keys():
+                if d[name1] < board.score():
+                    d[name1] = board.score()
+            else:
+                d[name1] = board.score()
+            myfile = open("data\stats.txt", 'w')
+            for i in d.keys():
+                myfile.write(i + '|' + str(d[i]) + '\n')
+            myfile.close()
+            pygame.time.delay(2000)
+            start_screen()
+            return
 
 # Фон приложения
 fon = pygame.transform.scale(load_image('title.png'), (850, 950))
@@ -472,21 +610,30 @@ while running and user:
             if event.key == pygame.K_d:
                 board.move_right()
 
-        # Обработка нажатий кнопок на экране
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            x, y = event.pos
-            if 50 <= x <= 150 and 50 <= y <= 150:
-                start_screen()
-            if 50 <= x <= 150 and 200 <= y <= 350:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
                 if pause:
                     pygame.time.set_timer(TIMER, SPEED)
                     pause, pause_color = False, 'orange'
                 else:
                     pygame.time.set_timer(TIMER, 0)
                     pause, pause_color = True, 'red'
-            if 50 <= x <= 150 and 800 <= y <= 900:
+
+        # Обработка нажатий кнопок на экране
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            if 20 <= x <= 180 and 50 <= y <= 150:
+                start_screen()
+            if 20 <= x <= 180 and 200 <= y <= 350:
+                if pause:
+                    pygame.time.set_timer(TIMER, SPEED)
+                    pause, pause_color = False, 'orange'
+                else:
+                    pygame.time.set_timer(TIMER, 0)
+                    pause, pause_color = True, 'red'
+            if 20 <= x <= 180 and 800 <= y <= 900:
                 terminate()
-            if 50 <= x <= 150 and 500 <= y <= 600:
+            if 20 <= x <= 180 and 500 <= y <= 600:
                 new_game()
 
         if event.type == pygame.KEYUP and not (pause):
@@ -515,7 +662,7 @@ while running and user:
     text_rect1 = text1.get_rect()
     text_rect1.center = (100, 100)
     screen.blit(text1, text_rect1)
-    text2 = font.render('Пауза', True, pygame.Color(pause_color))
+    text2 = font.render('Пауза(Space)', True, pygame.Color(pause_color))
     text_rect2 = text2.get_rect()
     text_rect2.center = (100, 250)
     screen.blit(text2, text_rect2)
@@ -523,7 +670,7 @@ while running and user:
     text_rect3 = text3.get_rect()
     text_rect3.center = (100, 380)
     screen.blit(text3, text_rect3)
-    text4 = font.render('Заново', True, pygame.Color('yellow'))
+    text4 = font.render('Заново(R)', True, pygame.Color('yellow'))
     text_rect4 = text4.get_rect()
     text_rect4.center = (100, 550)
     screen.blit(text4, text_rect4)
@@ -531,7 +678,7 @@ while running and user:
     text_rect5 = text5.get_rect()
     text_rect5.center = (100, 850)
     screen.blit(text5, text_rect5)
-    text6 = font.render('У вас есть {} бомб'.format(board.num_bomb()), True, pygame.Color('gold'))
+    text6 = font.render('{} бомб(B)'.format(board.num_bomb()), True, pygame.Color('gold'))
     text_rect6 = text6.get_rect()
     text_rect6.center = (100, 700)
     screen.blit(text6, text_rect6)
@@ -539,11 +686,11 @@ while running and user:
     text_rect7 = text7.get_rect()
     text_rect7.center = (100, 420)
     screen.blit(text7, text_rect7)
-    pygame.draw.rect(screen, pygame.Color('green'), (50, 50, 100, 100), 2)
-    pygame.draw.rect(screen, pygame.Color('green'), (50, 200, 100, 100), 2)
-    pygame.draw.rect(screen, pygame.Color('purple'), (30, 350, 140, 100), 2)
-    pygame.draw.rect(screen, pygame.Color('brown'), (50, 500, 100, 100), 5)
-    pygame.draw.rect(screen, pygame.Color('red'), (50, 800, 100, 100), 5)
+    pygame.draw.rect(screen, pygame.Color('green'), (20, 50, 160, 100), 2)
+    pygame.draw.rect(screen, pygame.Color('green'), (20, 200, 160, 100), 2)
+    pygame.draw.rect(screen, pygame.Color('purple'), (20, 350, 160, 100), 2)
+    pygame.draw.rect(screen, pygame.Color('brown'), (20, 500, 160, 100), 5)
+    pygame.draw.rect(screen, pygame.Color('red'), (20, 800, 160, 100), 5)
     pygame.draw.rect(screen, pygame.Color('gold'), (20, 650, 160, 100), 5)
     all_sprites.update()
     board.render()
