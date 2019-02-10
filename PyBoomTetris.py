@@ -379,7 +379,7 @@ def start_screen():
                 elif 275 <= x <= 575 and 450 <= y < 600:
                     rules()
                 elif 275 <= x <= 575 and 600 < y <= 750:
-                    pass
+                    show_record()
                 elif 275 <= x <= 575 and 750 < y <= 900:
                     terminate()
             if event.type == pygame.MOUSEMOTION:
@@ -409,6 +409,42 @@ def start_screen():
         text_rect5 = text5.get_rect()
         text_rect5.center = (425, 825)
         screen.blit(text5, text_rect5)
+        pygame.display.flip()
+
+
+def show_record():
+    fon = pygame.transform.scale(load_image('title.png'), (850, 950))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    myfile = open('data\stats.txt').read().split('\n')
+    d = {}
+    for i in range(len(myfile)):
+        if myfile[i]:
+            d[myfile[i].split('|')[0]] = int(myfile[i].split('|')[1])
+    sorted_by_value = sorted(d.items(), key=lambda kv: -kv[1])
+    i = 0
+    while i < 15:
+        if i < len(sorted_by_value):
+            text = font.render(sorted_by_value[i][0] + '        ' +
+                               str(sorted_by_value[i][1]), True, pygame.Color('gold'))
+            text_rect = text.get_rect()
+            text_rect.center = (425, 100 + 50 * i)
+            screen.blit(text, text_rect)
+        i += 1
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 100 <= x <= 750 and 800 <= y <= 900:
+                    start_screen()
+
+        text = font.render('Назад', True, pygame.Color('red'))
+        text_rect = text.get_rect()
+        text_rect.center = (425, 850)
+        screen.blit(text, text_rect)
+        pygame.draw.rect(screen, pygame.Color('red'), (100, 800, 650, 100), 5)
         pygame.display.flip()
 
 
@@ -500,6 +536,7 @@ def game_over_func():
         pygame.draw.rect(screen, pygame.Color('gold'), (600, 50, 200, 100), 5)
         pygame.display.flip()
 
+
 def new_record():
     name = '|'
     recorded = False
@@ -552,6 +589,7 @@ def new_record():
             pygame.time.delay(2000)
             start_screen()
             return
+
 
 # Фон приложения
 fon = pygame.transform.scale(load_image('title.png'), (850, 950))
