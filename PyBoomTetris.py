@@ -643,7 +643,7 @@ while running and user:
         if event.type == TIMER and not (pause):
             board.move_down()
 
-    # Проверка того, остановилась ли фигура. Если да, то удалить полные линии и создать новую
+    # Проверка того, остановилась ли фигура. Если да, то удалить полные линии и создать фигуру
     if board.is_stop():
         figPlace.play()
         board.test_line()
