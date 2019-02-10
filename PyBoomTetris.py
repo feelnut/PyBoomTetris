@@ -553,7 +553,7 @@ def new_record():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if 300 <= event.pos[0] <= 600 and 200 <= event.pos[1] <= 350:
                     name1 = name[:len(name) - 1]
-                    name = 'RECORDED!'
+                    name = 'Готово!'
                     recorded = True
         fon = pygame.transform.scale(load_image('title.png'), (850, 950))
         screen.blit(fon, (0, 0))
