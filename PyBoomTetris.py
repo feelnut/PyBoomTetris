@@ -378,8 +378,10 @@ def start_screen():
                     return
                 elif 275 <= x <= 575 and 450 <= y < 600:
                     rules()
+                    return
                 elif 275 <= x <= 575 and 600 < y <= 750:
                     show_record()
+                    return
                 elif 275 <= x <= 575 and 750 < y <= 900:
                     terminate()
             if event.type == pygame.MOUSEMOTION:
@@ -439,7 +441,7 @@ def show_record():
                 x, y = event.pos
                 if 100 <= x <= 750 and 800 <= y <= 900:
                     start_screen()
-
+                    return
         text = font.render('Назад', True, pygame.Color('red'))
         text_rect = text.get_rect()
         text_rect.center = (425, 850)
@@ -491,6 +493,7 @@ def rules():
                 x, y = event.pos
                 if 650 <= x <= 750 and 50 <= y <= 150:
                     start_screen()
+                    return
         text = font.render('Назад', True, pygame.Color('red'))
         text_rect = text.get_rect()
         text_rect.center = (700, 100)
@@ -527,7 +530,7 @@ def game_over_func():
                 x, y = event.pos
                 if 600 <= x <= 800 and 50 <= y <= 150:
                     new_record()
-
+                    return
         font = pygame.font.Font(None, 30)
         text = font.render('Записать рекорд', True, pygame.Color('gold'))
         text_rect = text.get_rect()
@@ -661,6 +664,7 @@ while running and user:
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             if 20 <= x <= 180 and 50 <= y <= 150:
+                pygame.mixer.music.stop()
                 start_screen()
             if 20 <= x <= 180 and 200 <= y <= 350:
                 if pause:
