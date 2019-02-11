@@ -414,6 +414,7 @@ def start_screen():
         pygame.display.flip()
 
 
+# Экран показа списка рекордов
 def show_record():
     fon = pygame.transform.scale(load_image('title.png'), (850, 950))
     screen.blit(fon, (0, 0))
@@ -450,6 +451,7 @@ def show_record():
         pygame.display.flip()
 
 
+# Экран с правилами игры
 def rules():
     intro_text = ["PyBoomTetris", "",
                   "Добро пожаловать в тетрис!",
@@ -540,6 +542,7 @@ def game_over_func():
         pygame.display.flip()
 
 
+# Экран записи нового рекорда
 def new_record():
     name = '|'
     recorded = False
@@ -739,6 +742,6 @@ while running and user:
     all_sprites.draw(screen)
     clock.tick(50)
     pygame.display.flip()
-
+# Выход из приложения
 if not (running):
     terminate()
