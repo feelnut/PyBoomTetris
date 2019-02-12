@@ -425,7 +425,6 @@ def show_record():
         if myfile[i]:
             d[myfile[i].split('|')[0]] = int(myfile[i].split('|')[1])
     sorted_by_value = sorted(d.items(), key=lambda kv: (-kv[1], kv[0]))
-    print(sorted_by_value)
     i = 0
     while i < 15:
         if i < len(sorted_by_value):
