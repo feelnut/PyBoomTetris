@@ -19,7 +19,7 @@ pause = False
 pause_color = 'orange'
 # Дисплей и таймер для игры
 pygame.time.set_timer(TIMER, SPEED)
-pygame.time.set_timer(MOVE_TIMER, 500)
+pygame.time.set_timer(MOVE_TIMER, 600)
 size = WIDHT, HEIGHT
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("PyBoomTetris")
