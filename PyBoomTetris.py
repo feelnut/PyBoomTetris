@@ -9,7 +9,8 @@ pygame.mixer.init()
 WIDHT = 850
 HEIGHT = 950
 TIMER = 1
-SPEED = 600
+MOVE_TIMER = 2
+SPEED = 750
 GRAVITY = 0.2
 c = 0
 screen_rect = (0, 0, WIDHT, HEIGHT)
@@ -18,6 +19,7 @@ pause = False
 pause_color = 'orange'
 # Дисплей и таймер для игры
 pygame.time.set_timer(TIMER, SPEED)
+pygame.time.set_timer(MOVE_TIMER, 500)
 size = WIDHT, HEIGHT
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("PyBoomTetris")
@@ -68,24 +70,12 @@ class Board():
         self.bomba = False
 
     # Создание новой фигуры, если старая установлена(регулируется в осн. коде)
-    def figure(self):
+    def figure(self, fig, col, num):
         global moving
-        # Начальные координаты фигур(9 штук)
-        l = [[[0, 5], [0, 4], [0, 6], [1, 6]],  # 0
-             [[0, 5], [0, 4], [0, 6], [1, 4]],  # 1
-             [[0, 6]],  # 2
-             [[0, 5], [0, 6]],  # 3
-             [[0, 5], [0, 4], [0, 6]],  # 4
-             [[0, 5], [0, 6], [1, 5], [1, 6]],  # 5
-             [[1, 5], [0, 5], [1, 4], [0, 6]],  # 6
-             [[1, 6], [0, 5], [0, 6], [1, 7]],  # 7
-             [[0, 5], [0, 4], [0, 6], [1, 5]]]  # 8
-        colors = ['blue', 'yellow', 'red', 'orange', 'green']
-        num = random.randint(0, 8)
-        self.coords = l[num]
+        self.coords = fig
         self.figure_num = num
         self.end = False
-        self.color = colors[random.randint(0, 4)]
+        self.color = col
         moving = True
         for i in range(len(self.coords)):
             if self.board[self.coords[i][0]][self.coords[i][1]] != 0:
@@ -241,6 +231,7 @@ class Board():
     # Проверка поля на полностью заполненные линии и их удаление
     def test_line(self):
         global SPEED
+        count = 0
         for y in range(self.height):
             f = True
             for i in range(self.width):
@@ -248,14 +239,17 @@ class Board():
                     f = False
                     break
             if f:
+                count += 1
                 removeLine.play()
                 for i in range(y, 0, -1):
                     for j in range(self.width):
                         self.board[i][j] = self.board[i - 1][j]
-                self.ingame_counter += 100
-                SPEED -= 15
-                pygame.time.set_timer(TIMER, SPEED)
-                self.bomb_counter += random.choice([0, 1, 1, 2, 2])
+        if count:
+            self.ingame_counter = self.ingame_counter + 100 + 200 * (count - 1) if count <= 2 \
+                else 700
+            SPEED = SPEED - 10 if SPEED > 300 else SPEED
+            pygame.time.set_timer(TIMER, SPEED)
+            self.bomb_counter += random.choice([1, 1, 1, 2, 2])
 
     # Возвращение текущего счёта для отображения на экране
     def score(self):
@@ -275,7 +269,7 @@ class Board():
         if self.bomb_counter > 0:
             explosion.play()
             self.bomb_counter -= 1
-            SPEED -= 10
+            SPEED = SPEED - 5 if SPEED > 300 else SPEED
             pygame.time.set_timer(TIMER, 0)
             c = 0
             for i in range(len(self.coords)):
@@ -597,19 +591,17 @@ def new_record():
             return
 
 
-# Фон приложения
-fon = pygame.transform.scale(load_image('title.png'), (850, 950))
-
-
 # Функция начала новой игры(Обновляет все значения)
 def new_game():
-    global running, moving, fig, board, user
+    global running, moving, fig, board, user, next_fig
     screen.blit(fon, (0, 0))
     board = Board(12, 18)
     running = True
     user = True
     moving = False
-    fig = board.figure()
+    next_fig = get_next_fig()
+    board.figure(next_fig[0], next_fig[1], next_fig[2])
+    next_fig = get_next_fig()
     pygame.time.set_timer(TIMER, SPEED)
     volume = 0.3
     pygame.mixer.music.load('music\OST.mp3')
@@ -625,6 +617,36 @@ def create_particles(position):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
+def draw_next_fig(fig, col):
+    for i in range(3):
+        for j in range(3):
+            pygame.draw.rect(screen, pygame.Color('white'),
+                             (20 + 50 * j, 20 + 50 * i, 50, 50), 2)
+    for i in fig:
+        pygame.draw.rect(screen, pygame.Color(col),
+                         (21 + 50 * i[0], 21 + 50 * (i[1] - 4), 48, 48))
+
+
+def get_next_fig():
+    l = [[[0, 5], [0, 4], [0, 6], [1, 6]],  # 0
+         [[0, 5], [0, 4], [0, 6], [1, 4]],  # 1
+         [[0, 6]],  # 2
+         [[0, 5], [0, 6]],  # 3
+         [[0, 5], [0, 4], [0, 6]],  # 4
+         [[0, 5], [0, 6], [1, 5], [1, 6]],  # 5
+         [[1, 5], [0, 5], [1, 4], [0, 6]],  # 6
+         [[1, 5], [0, 4], [0, 5], [1, 6]],  # 7
+         [[0, 5], [0, 4], [0, 6], [1, 5]]]  # 8
+    colors = ['blue', 'yellow', 'red', 'orange', 'green']
+    num = random.randint(0, 8)
+    figure = l[num]
+    color = colors[random.randint(0, 4)]
+    return (figure, color, num)
+
+
+# Фон приложения
+fon = pygame.transform.scale(load_image('title.png'), (850, 950))
+
 # Создание списка спрайтов и таймера для частиц
 all_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
@@ -634,6 +656,7 @@ start_screen()
 user = True
 new_game()
 while running and user:
+    key_press = pygame.key.get_pressed()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -649,10 +672,11 @@ while running and user:
                 board.turn_right()
             if event.key == pygame.K_s:
                 pygame.time.set_timer(TIMER, 50)
-            if event.key == pygame.K_a:
-                board.move_left()
-            if event.key == pygame.K_d:
-                board.move_right()
+
+        if key_press[pygame.K_a] and MOVE_TIMER:
+            board.move_left()
+        elif key_press[pygame.K_d] and MOVE_TIMER:
+            board.move_right()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
@@ -666,10 +690,10 @@ while running and user:
         # Обработка нажатий кнопок на экране
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            if 20 <= x <= 180 and 50 <= y <= 150:
+            if 20 <= x <= 180 and 200 <= y <= 250:
                 pygame.mixer.music.stop()
                 start_screen()
-            if 20 <= x <= 180 and 200 <= y <= 350:
+            if 20 <= x <= 180 and 275 <= y <= 325:
                 if pause:
                     pygame.time.set_timer(TIMER, SPEED)
                     pause, pause_color = False, 'orange'
@@ -690,9 +714,11 @@ while running and user:
 
     # Проверка того, остановилась ли фигура. Если да, то удалить полные линии и создать фигуру
     if board.is_stop():
+        global next_fig
         figPlace.play()
         board.test_line()
-        fig = board.figure()
+        board.figure(next_fig[0], next_fig[1], next_fig[2])
+        next_fig = get_next_fig()
 
     # Если игра закончилась, то отобразить экран конца игры
     if board.game_over():
@@ -705,11 +731,11 @@ while running and user:
     font = pygame.font.Font(None, 25)
     text1 = font.render('Меню', True, pygame.Color('orange'))
     text_rect1 = text1.get_rect()
-    text_rect1.center = (100, 100)
+    text_rect1.center = (100, 225)
     screen.blit(text1, text_rect1)
     text2 = font.render('Пауза(Space)', True, pygame.Color(pause_color))
     text_rect2 = text2.get_rect()
-    text_rect2.center = (100, 250)
+    text_rect2.center = (100, 300)
     screen.blit(text2, text_rect2)
     text3 = font.render('Счёт: {}'.format(board.score()), True, pygame.Color('purple'))
     text_rect3 = text3.get_rect()
@@ -731,12 +757,13 @@ while running and user:
     text_rect7 = text7.get_rect()
     text_rect7.center = (100, 420)
     screen.blit(text7, text_rect7)
-    pygame.draw.rect(screen, pygame.Color('green'), (20, 50, 160, 100), 2)
-    pygame.draw.rect(screen, pygame.Color('green'), (20, 200, 160, 100), 2)
+    pygame.draw.rect(screen, pygame.Color('green'), (20, 200, 160, 50), 2)
+    pygame.draw.rect(screen, pygame.Color('green'), (20, 275, 160, 50), 2)
     pygame.draw.rect(screen, pygame.Color('purple'), (20, 350, 160, 100), 2)
     pygame.draw.rect(screen, pygame.Color('brown'), (20, 500, 160, 100), 5)
     pygame.draw.rect(screen, pygame.Color('red'), (20, 800, 160, 100), 5)
     pygame.draw.rect(screen, pygame.Color('gold'), (20, 650, 160, 100), 5)
+    draw_next_fig(next_fig[0], next_fig[1])
     all_sprites.update()
     board.render()
     all_sprites.draw(screen)
